@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    // first step：指定this，返回一个函数
+    Function.prototype.myBind = function myBind(context) {
+      const that = this
+      return function () {
+        return that.apply(context)
+      }
+    }
+
+    // second step：可以传入参数并实现柯里化
+    Function.prototype.myBind = function myBind(context, ...args) {
+      // const that = this
+      // const args = [...arguments].slice(1)
+      return (...bindArgs) => {
+        // const bindArgs = [...arguments]
+        return this.apply(context, [...args, ...bindArgs])
+      }
+    }
+
+    // third step：当返回的函数被作为构造函数，使用new进行创建对象，忽略this
+    Function.prototype.myBind = function myBind(context, ...args) {
+      if (typeof this !== 'function') {
+        throw new Error('Function.prototype.bind - what is trying to be bound is not callable')
+      }
+
+      const that = this
+      const fBound = function () {
+        const bindArgs = [...arguments]
+        return that.apply(
+          this instanceof fBound ? this : context,
+          [...args, ...bindArgs]
+        )
+      }
+      // 修改返回函数的prototype为绑定函数的prototype，实例就可以继承绑定函数原型中的值
+      fBound.prototype = Object.create(this.prototype)
+      return fBound
+    }
+
+    var value = 2
+    var foo = {
+      value: 1
+    }
+    function bar(name, age) {
+      this.habit = 'shopping'
+      console.log({
+        value: this.value,
+        name,
+        age
+      })
+    }
+    bar.prototype.friend = 'kevin'
+    var bindFoo = bar.myBind(foo, 'jack')
+    const obj = new bindFoo(20)
+    console.log(obj, bar.prototype.friend)
+
+    obj.__proto__.friend = "Kitty" // 修改原型
+    bar.prototype.friend // 未被修改
+    
+  </script>
+</body>
+</html>
