@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <script>
+    function fn1() {
+      console.log(1)
+    }
+    function fn2() {
+      console.log(2)
+    }
+
+    // 思路
+    // 将一个函数赋值给对象的一个属性，通过对象调用这个方法，方法里的this就指向该对象
+    // obj.fn = fu // 第一步将方法赋给对象
+    // obj.fn() // 第二步在对象中执行该方法
+    // Reflect.deleteProperty(obj, 'fn') // 第三步将对象中的方法删除
+
+    Function.prototype.myCall = function myCall(context, ...args) {
+      context = context || window
+      // 这个this是调用myCall的函数，将它赋给context的fn属性
+      // 这时候就成为context的方法了，执行的时候的this就指向context了
+      context.fn = this
+      const result = context.fn(...args)
+      Reflect.deleteProperty(context, 'fn')
+      return result
+    }
+
+    fn1.myCall(fn2)
+
+    fn1.myCall.myCall(fn2)
+    // 执行过程
+    Function.prototype.myCall = function myCall(context, ...args) {
+      // context 为 fn2
+      context = context || window
+      // this和context.fn 为 myCall
+      // fn2.myCall
+      context.fn = this
+      // 等待执行fn2.myCall(无参数)
+      const result = context.fn(...args)
+      Reflect.deleteProperty(context, 'fn')
+      return result
+    }
+
+    // 调用fn2.myCall(无参数)
+    Function.prototype.myCall = function myCall(context, ...args) {
+      // context 为 window
+      context = context || window
+      // this和context.fn 为 fn2
+      // window.fn2
+      context.fn = this
+      // 执行window.fn2(无参数)
+      const result = context.fn()
+      Reflect.deleteProperty(context, 'fn')
+      return result
+    }
+  </script>
+</body>
+</html>
